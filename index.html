@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FACTUCONTROL</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d0f0d">
+<link rel="apple-touch-icon" href="ICONS/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0d0f0d;
+    --panel:#151815;
+    --panel2:#1b1f1b;
+    --line:#2a2e2a;
+    --text:#e7e9e6;
+    --muted:#8a938a;
+    --accent:#e8b23d;
+    --accent-dim:#7a611f;
+    --gasto:#d9534f;
+    --cobro:#5fae74;
+    --danger:#d9534f;
+    --radius:2px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-serif;-webkit-font-smoothing:antialiased;padding-bottom:90px;}
+  header{
+    position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--line);
+    padding:14px 16px 10px;display:flex;flex-direction:column;gap:2px;
+  }
+  header .brand{font-family:'IBM Plex Mono',monospace;font-weight:700;letter-spacing:.06em;font-size:15px;color:var(--accent);}
+  header .brand span{color:var(--muted);font-weight:500;}
+  header .sub{font-size:11px;color:var(--muted);font-family:'IBM Plex Mono',monospace;}
+
+  .tabs{display:flex;gap:0;border-bottom:1px solid var(--line);position:sticky;top:52px;background:var(--bg);z-index:19;}
+  .tab{flex:1;padding:10px 4px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.05em;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer;}
+  .tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+
+  main{padding:14px 16px 24px;max-width:640px;margin:0 auto;}
+  .view{display:none;}
+  .view.active{display:block;}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px;margin-bottom:12px;}
+  .field{margin-bottom:12px;}
+  .field label{display:block;font-size:11px;color:var(--muted);font-family:'IBM Plex Mono',monospace;letter-spacing:.04em;margin-bottom:5px;text-transform:uppercase;}
+  input[type=text],input[type=number],input[type=date],select{
+    width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--text);
+    padding:10px 10px;border-radius:var(--radius);font-family:'IBM Plex Sans',sans-serif;font-size:14px;
+  }
+  input:focus,select:focus{outline:none;border-color:var(--accent);}
+  .row2{display:flex;gap:10px;}
+  .row2 > .field{flex:1;}
+  .checkrow{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+  .checkrow input{width:18px;height:18px;accent-color:var(--accent);}
+  .checkrow label{font-size:13px;color:var(--text);font-family:'IBM Plex Sans',sans-serif;text-transform:none;}
+
+  .segmented{display:flex;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin-bottom:14px;}
+  .segmented button{flex:1;background:var(--panel2);color:var(--muted);border:none;padding:10px;font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.05em;cursor:pointer;}
+  .segmented button.sel-gasto.on{background:var(--gasto);color:#150606;}
+  .segmented button.sel-cobro.on{background:var(--cobro);color:#06150a;}
+
+  .btn{display:block;width:100%;padding:12px;background:var(--accent);color:#1a1300;border:none;border-radius:var(--radius);
+    font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:13px;letter-spacing:.05em;cursor:pointer;text-transform:uppercase;}
+  .btn:active{opacity:.85;}
+  .btn.secondary{background:var(--panel2);color:var(--text);border:1px solid var(--line);}
+  .btn.danger{background:transparent;color:var(--danger);border:1px solid var(--danger);}
+  .btn.small{padding:8px;font-size:11px;width:auto;}
+
+  .filebtn{display:inline-flex;align-items:center;gap:6px;background:var(--panel2);border:1px dashed var(--line);color:var(--muted);
+    padding:9px 12px;border-radius:var(--radius);font-size:12px;cursor:pointer;width:100%;justify-content:center;}
+  .filebtn input{display:none;}
+  .thumb{width:100%;max-height:160px;object-fit:contain;border:1px solid var(--line);border-radius:var(--radius);margin-top:8px;}
+
+  .movimiento{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:11px 0;border-bottom:1px solid var(--line);}
+  .movimiento:last-child{border-bottom:none;}
+  .mov-left{flex:1;min-width:0;}
+  .mov-concepto{font-size:14px;font-weight:500;}
+  .mov-meta{font-size:11px;color:var(--muted);font-family:'IBM Plex Mono',monospace;margin-top:2px;}
+  .mov-right{text-align:right;flex-shrink:0;}
+  .mov-importe{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:14px;}
+  .mov-importe.gasto{color:var(--gasto);}
+  .mov-importe.cobro{color:var(--cobro);}
+  .mov-tags{display:flex;gap:4px;margin-top:4px;justify-content:flex-end;flex-wrap:wrap;}
+  .tag{font-size:9px;font-family:'IBM Plex Mono',monospace;padding:1px 5px;border-radius:2px;border:1px solid var(--line);color:var(--muted);}
+  .tag.rec{border-color:var(--accent-dim);color:var(--accent);}
+  .mov-actions{display:flex;gap:8px;margin-top:6px;justify-content:flex-end;}
+  .mov-actions button{background:none;border:none;color:var(--muted);font-size:11px;font-family:'IBM Plex Mono',monospace;cursor:pointer;padding:2px 4px;}
+  .mov-actions button:hover{color:var(--accent);}
+
+  .section-title{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.05em;color:var(--muted);text-transform:uppercase;margin:18px 0 8px;}
+  .section-title:first-child{margin-top:0;}
+  .empty{color:var(--muted);font-size:13px;text-align:center;padding:20px 0;}
+
+  .fab{position:fixed;bottom:18px;right:18px;width:56px;height:56px;border-radius:50%;background:var(--accent);color:#1a1300;
+    border:none;font-size:28px;box-shadow:0 4px 14px rgba(0,0,0,.5);cursor:pointer;z-index:30;}
+
+  .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:40;align-items:flex-end;justify-content:center;}
+  .modal-bg.open{display:flex;}
+  .modal{background:var(--panel);border-top:1px solid var(--line);width:100%;max-width:640px;max-height:92vh;overflow-y:auto;
+    border-radius:12px 12px 0 0;padding:18px 16px 24px;}
+  .modal h2{font-family:'IBM Plex Mono',monospace;font-size:14px;letter-spacing:.05em;margin:0 0 16px;color:var(--accent);text-transform:uppercase;}
+  .modal-close{position:sticky;top:0;text-align:right;}
+  .modal-close button{background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;}
+
+  .quarter-picker{display:flex;gap:8px;margin-bottom:16px;}
+  .quarter-picker select{flex:1;}
+
+  .summary-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--line);}
+  .summary-row:last-child{border-bottom:none;}
+  .summary-label{font-size:13px;color:var(--text);}
+  .summary-label small{display:block;color:var(--muted);font-size:10px;margin-top:2px;}
+  .summary-value{font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:17px;}
+  .summary-value.gasto{color:var(--gasto);}
+  .summary-value.cobro{color:var(--cobro);}
+  .summary-value.neutral{color:var(--accent);}
+
+  .banner{font-size:11px;color:var(--muted);font-family:'IBM Plex Mono',monospace;background:var(--panel2);border:1px solid var(--line);
+    padding:8px 10px;border-radius:var(--radius);margin-bottom:14px;line-height:1.5;}
+  .banner b{color:var(--accent);}
+
+  .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--panel2);border:1px solid var(--accent);
+    color:var(--text);padding:9px 16px;border-radius:var(--radius);font-size:12px;font-family:'IBM Plex Mono',monospace;
+    z-index:50;opacity:0;transition:opacity .25s;pointer-events:none;}
+  .toast.show{opacity:1;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">FACTU<span>CONTROL</span></div>
+  <div class="sub" id="headerSub">cargando…</div>
+</header>
+
+<div class="tabs">
+  <div class="tab active" data-view="viewMovs">Apuntes</div>
+  <div class="tab" data-view="viewResumen">Resumen</div>
+</div>
+
+<main>
+
+  <div class="view active" id="viewMovs">
+    <div class="banner" id="proximoCierre"></div>
+    <div id="listaMovs"></div>
+  </div>
+
+  <div class="view" id="viewResumen">
+    <div class="card">
+      <div class="quarter-picker">
+        <select id="selTrimestre">
+          <option value="1">T1 (Ene-Mar)</option>
+          <option value="2">T2 (Abr-Jun)</option>
+          <option value="3">T3 (Jul-Sep)</option>
+          <option value="4">T4 (Oct-Dic)</option>
+        </select>
+        <select id="selAnio"></select>
+      </div>
+      <button class="btn" id="btnCalcular">Calcular resumen</button>
+    </div>
+
+    <div class="card" id="cardResumenHacienda" style="display:none;border-color:var(--accent);">
+      <div class="section-title" style="color:var(--accent);">Para Hacienda este trimestre</div>
+      <div class="summary-row">
+        <div class="summary-label">IVA a pagar (modelo 303)<small>IVA repercutido − IVA soportado</small></div>
+        <div class="summary-value neutral" id="valIvaAPagar" style="font-size:22px;">—</div>
+      </div>
+      <div class="summary-row">
+        <div class="summary-label">Resultado neto (base IRPF)<small>ingresos netos − gastos netos, sin IVA</small></div>
+        <div class="summary-value neutral" id="valResultadoNeto" style="font-size:22px;">—</div>
+      </div>
+    </div>
+
+    <div class="card" id="cardResumenPrincipal" style="display:none;">
+      <div class="section-title">Los 3 datos</div>
+      <div class="summary-row">
+        <div class="summary-label">Gastos con IVA<small>importe total pagado, IVA incluido</small></div>
+        <div class="summary-value gasto" id="valGastosConIva">—</div>
+      </div>
+      <div class="summary-row">
+        <div class="summary-label">Gastos sin IVA<small>autónomos, seguros, etc.</small></div>
+        <div class="summary-value gasto" id="valGastosSinIva">—</div>
+      </div>
+      <div class="summary-row">
+        <div class="summary-label">Ingresos con IVA<small>facturado a clientes, IVA incluido</small></div>
+        <div class="summary-value cobro" id="valIngresosConIva">—</div>
+      </div>
+    </div>
+
+    <div class="card" id="cardResumenExtra" style="display:none;">
+      <div class="section-title">Extra — te puede interesar para el 303</div>
+      <div class="summary-row">
+        <div class="summary-label">IVA soportado<small>el que has pagado en gastos con IVA</small></div>
+        <div class="summary-value gasto" id="valIvaSoportado">—</div>
+      </div>
+      <div class="summary-row">
+        <div class="summary-label">IVA repercutido<small>el que has cobrado a clientes</small></div>
+        <div class="summary-value cobro" id="valIvaRepercutido">—</div>
+      </div>
+      <div class="summary-row">
+        <div class="summary-label">A liquidar / compensar<small>repercutido − soportado</small></div>
+        <div class="summary-value neutral" id="valLiquidacion">—</div>
+      </div>
+      <div class="summary-row">
+        <div class="summary-label">Ingresos sin IVA<small>si marcaste algún cobro como sin IVA</small></div>
+        <div class="summary-value cobro" id="valIngresosSinIva">—</div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<button class="fab" id="fabNuevo">+</button>
+
+<!-- Modal apunte -->
+<div class="modal-bg" id="modalApunte">
+  <div class="modal">
+    <div class="modal-close"><button id="closeApunte">✕</button></div>
+    <h2 id="modalTitulo">Nuevo apunte</h2>
+
+    <div class="segmented">
+      <button class="sel-gasto" id="btnTipoGasto" type="button">GASTO</button>
+      <button class="sel-cobro" id="btnTipoCobro" type="button">COBRO</button>
+    </div>
+
+    <div class="field">
+      <label>Concepto</label>
+      <input type="text" id="inpConcepto" placeholder="ej. Material eléctrico, Cuota autónomos...">
+    </div>
+
+    <div class="field">
+      <label>Fecha</label>
+      <input type="date" id="inpFecha">
+    </div>
+
+    <div class="row2">
+      <div class="field">
+        <label>Importe total (€)</label>
+        <input type="number" id="inpTotal" step="0.01" placeholder="ej. 121.00">
+      </div>
+      <div class="field" id="fieldIvaPct">
+        <label>% IVA</label>
+        <input type="number" id="inpIvaPct" step="1" placeholder="21">
+      </div>
+    </div>
+    <div class="field" id="fieldDesglose" style="margin-top:-6px;">
+      <div class="mov-meta" id="desgloseTexto">Neto: — · IVA: —</div>
+    </div>
+
+    <div class="checkrow">
+      <input type="checkbox" id="inpSinIva">
+      <label for="inpSinIva">Sin IVA (no repercute / no deducible por IVA)</label>
+    </div>
+
+    <div class="checkrow">
+      <input type="checkbox" id="inpRecurrente">
+      <label for="inpRecurrente">Recurrente cada mes (se añadirá solo)</label>
+    </div>
+
+    <div class="field">
+      <label>Foto de la factura (opcional)</label>
+      <label class="filebtn">📷 Adjuntar / cambiar foto
+        <input type="file" id="inpFoto" accept="image/*">
+      </label>
+      <img id="previewFoto" class="thumb" style="display:none;">
+    </div>
+
+    <button class="btn" id="btnGuardarApunte">Guardar apunte</button>
+    <button class="btn danger" id="btnBorrarApunte" style="display:none;margin-top:8px;">Eliminar apunte</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
